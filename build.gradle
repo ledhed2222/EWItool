@@ -14,8 +14,14 @@ plugins {
     id 'application'
 
     // JavaFX
-    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
+
+    // Badass Runtime Plugin
+    id 'org.beryx.runtime' version '1.11.3'
 }
+
+def mainClassName = 'com.github.ledhed2222.ewitool.Main'
+def appName = 'EWITool'
 
 repositories {
     // Use jcenter for resolving dependencies.
@@ -33,7 +39,8 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'com.gregweisbrod.ewitool.Main'
+    mainClass = "${mainClassName}"
+    applicationName = "${appName}"
 }
 
 javafx {
@@ -41,9 +48,10 @@ javafx {
     modules = [ 'javafx.graphics', 'javafx.controls' ]
 }
 
+/*
 jar {
     manifest {
-        attributes 'Main-Class': 'com.gregweisbrod.ewitool.Main'
+        attributes 'Main-Class': "${mainClassName}"
     }
 }
 
@@ -59,9 +67,19 @@ task fatJar(type: Jar) {
     }
     with jar
 }
+ */
 
-def appName = 'EWITool2'
+runtime {
+    options = ['--no-man-pages', '--strip-debug', '--compress', '2', '--no-header-files']
+    jpackage {
+        imageOptions = ['--icon', "${project.buildDir}/resources/main/EWItool.icns"]
+        if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
+            installerType = 'dmg'
+        }
+    }
+}
 
+/*
 task jpackage(type: Exec) {
     dependsOn 'clean'
     dependsOn 'fatJar'
@@ -72,5 +90,5 @@ task jpackage(type: Exec) {
             '--main-jar', 'libs/EWItool-all.jar',
             '--type', 'dmg',
             '--verbose',
-            '--icon', 'build/resources/main/EWItool2.icns'
-}
+            '--icon', 'build/resources/main/EWItool.icns'
+}*/
