@@ -74,7 +74,7 @@ runtime {
     jpackage {
         imageOptions = ['--icon', "${project.buildDir}/resources/main/EWItool.icns"]
         if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
-            installerType = 'dmg'
+            installerType = 'pkg'
         }
     }
 }
