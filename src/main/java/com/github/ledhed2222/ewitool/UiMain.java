@@ -39,7 +39,7 @@ import javafx.scene.layout.BorderPane;
 public class UiMain extends Application {
 
   static final String  APP_NAME = "EWItool";
-  static final double  APP_VERSION = 2.2;
+  static final String  APP_VERSION = "2.2.1";
   static final int     COPYRIGHT_YEAR = 2020;
   static final String  RELEASE_STATUS = "Production";
   static final String  LEAD_AUTHOR = "S.Merrony & ledhed2222";

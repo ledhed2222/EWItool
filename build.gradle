@@ -33,6 +33,9 @@ dependencies {
     // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
     implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.4'
 
+    // https://search.maven.org/artifact/uk.co.xfactory-librarians/coremidi4j/1.4/jar
+    implementation group: 'uk.co.xfactory-librarians', name: 'coremidi4j', version: '1.4'
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
 }
