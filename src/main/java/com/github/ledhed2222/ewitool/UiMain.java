@@ -110,8 +110,6 @@ public class UiMain extends Application {
     tabPane.getTabs().addAll( scratchPadTab, 
                               patchSetsTab, 
                               currentPatchSetTab,
-                              patchEditorTab, 
-                              currentPatchSetTab,
                               patchEditorTab
                             );
 
