@@ -57,7 +57,7 @@ public class UiMain extends Application {
   MenuBar mainMenuBar;
   Menu patchMenu;
   TabPane tabPane;
-  Tab scratchPadTab, patchSetsTab, currentPatchSetTab, keyPatchesTab, patchEditorTab;
+  Tab scratchPadTab, patchSetsTab, currentPatchSetTab, patchEditorTab;
   UiStatusBar statusBar;
   MidiHandler midiHandler;
   volatile SharedData sharedData;
@@ -106,19 +106,16 @@ public class UiMain extends Application {
     patchEditorTab = new PatchEditorTab( sharedData, scratchPad, midiHandler );
     currentPatchSetTab = new CurrentPatchSetTab( sharedData, scratchPad, midiHandler, patchEditorTab );
     patchSetsTab = new PatchSetsTab( sharedData, scratchPad, userPrefs, midiHandler, currentPatchSetTab );   
-    keyPatchesTab = new KeyPatchesTab( sharedData, midiHandler );     
 
     tabPane.getTabs().addAll( scratchPadTab, 
                               patchSetsTab, 
                               currentPatchSetTab,
-                              patchEditorTab, 
-                              keyPatchesTab 
+                              patchEditorTab
                             );
 
     currentPatchSetTab.setDisable( true );
     // FIXME Uncomment before release    patchEditorTab.setDisable( true );
     patchEditorTab.setDisable( true );
-    keyPatchesTab.setDisable( true );
 
     tabPane.getSelectionModel().selectedItemProperty().addListener( (tab, oldtab, newtab) -> {
       if (newtab == patchEditorTab) patchMenu.setDisable( false );
@@ -209,7 +206,6 @@ public class UiMain extends Application {
           ((PatchEditorTab) patchEditorTab).populateCombo( sharedData );
           currentPatchSetTab.setDisable( false );
           patchEditorTab.setDisable( false );
-          keyPatchesTab.setDisable( false );
           tabPane.getSelectionModel().select( currentPatchSetTab );
         }
       });
