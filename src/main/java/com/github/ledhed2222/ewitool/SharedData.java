@@ -34,7 +34,7 @@ public class SharedData extends Observable {
   
   private volatile int lastPatchLoaded;
   public  volatile boolean loadedQuickPCs;
-  private volatile boolean ewiAttached, epxAvailable;
+  private volatile boolean ewiAttached;
   private volatile int scratchPadCount;
   private volatile String statusMessage;
   private volatile long statusMillis;
@@ -77,7 +77,6 @@ public class SharedData extends Observable {
     sendQ = new LinkedBlockingQueue<>();
     monitorQ = new LinkedBlockingQueue<>();
     ewiAttached = false;
-    epxAvailable = false;
     midiInDev = "[Not set]";
     midiOutDev = "[Not set]";
     statusMessage = "";
@@ -100,13 +99,7 @@ public class SharedData extends Observable {
       ewiAttached = isIt; setChanged(); notifyObservers();
     }
   }
-  public boolean getEpxAvailable() { return epxAvailable; }
-  public void setEpxAvailable( boolean isIt ) {
-    if (isIt != epxAvailable) {
-      epxAvailable = isIt; setChanged(); notifyObservers();
-    }
-  }
-  
+
   public String getMidiInDev() { return midiInDev; }
   public void setMidiInDev( String dev ) { midiInDev = dev; setChanged(); notifyObservers(); }
   public String getMidiOutDev() { return midiOutDev; }

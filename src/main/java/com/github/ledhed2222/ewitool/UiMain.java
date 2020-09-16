@@ -57,7 +57,7 @@ public class UiMain extends Application {
   MenuBar mainMenuBar;
   Menu patchMenu;
   TabPane tabPane;
-  Tab scratchPadTab, patchSetsTab, epxTab, currentPatchSetTab, keyPatchesTab, patchEditorTab; 
+  Tab scratchPadTab, patchSetsTab, currentPatchSetTab, keyPatchesTab, patchEditorTab;
   UiStatusBar statusBar;
   MidiHandler midiHandler;
   volatile SharedData sharedData;
@@ -102,8 +102,7 @@ public class UiMain extends Application {
 
     tabPane = new TabPane();
 
-    epxTab = new EPXTab( sharedData, scratchPad, userPrefs );
-    scratchPadTab = new ScratchPadTab( sharedData, scratchPad, epxTab );
+    scratchPadTab = new ScratchPadTab( sharedData, scratchPad );
     patchEditorTab = new PatchEditorTab( sharedData, scratchPad, midiHandler );
     currentPatchSetTab = new CurrentPatchSetTab( sharedData, scratchPad, midiHandler, patchEditorTab );
     patchSetsTab = new PatchSetsTab( sharedData, scratchPad, userPrefs, midiHandler, currentPatchSetTab );   
@@ -111,8 +110,7 @@ public class UiMain extends Application {
 
     tabPane.getTabs().addAll( scratchPadTab, 
                               patchSetsTab, 
-                              epxTab, 
-                              currentPatchSetTab, 
+                              currentPatchSetTab,
                               patchEditorTab, 
                               keyPatchesTab 
                             );
