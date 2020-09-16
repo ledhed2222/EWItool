@@ -58,19 +58,21 @@ public class UserPrefs {
     p.put( MIDI_OUT_PORT, op );
     midiOutPort.set( op );  // This must be last as it notifies change
   }
-    public String getLibraryLocation() {
-        String location = p.get( LIBRARY_LOCATION, "<Not Chosen>" );
-        if (!location.equals( "<Not Chosen>" )) {
-            File llFile = new File( location );
-            if (!llFile.exists()) {
-                return "<Not Chosen>";
-            }
-        }
-        return location;
-    }
+
+  public String getLibraryLocation() {
+      String location = p.get( LIBRARY_LOCATION, "<Not Chosen>" );
+      if (!location.equals( "<Not Chosen>" )) {
+          File llFile = new File( location );
+          if (!llFile.exists()) {
+              return "<Not Chosen>";
+          }
+      }
+      return location;
+  }
   public void setLibraryLocation( String ll ) {
     p.put( LIBRARY_LOCATION, ll );
   }
+
   public String getExportLocation() {
     return getLibraryLocation() + System.getProperty( "file.separator" ) + 
            EXPORT_SUBDIR;

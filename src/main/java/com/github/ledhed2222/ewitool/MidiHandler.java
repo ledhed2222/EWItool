@@ -23,9 +23,9 @@ package com.github.ledhed2222.ewitool;
 import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
+import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceProvider;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequencer;
@@ -96,7 +96,7 @@ public class MidiHandler {
     
     /** 
      * This task was introduced to work around a hang on OS X in
-     * the CoreMidi4J v0.4 MidiSystem.getMidiDeviceInfo() call which 
+     * the CoreMidi4J v0.4 MidiSystem.getMidiDeviceInfo() call which
      * seems to encounter a resource lock if run on the main thread.
      */
     Task<Void> mt = new Task<Void>() {
@@ -132,10 +132,10 @@ public class MidiHandler {
    * either the IN or OUT port set in UserPrefs then open it.
    */
   private void scanAndOpenMIDIPorts() {
-    
     MidiDevice device;
-    
-    infos = MidiSystem.getMidiDeviceInfo();
+
+    // Use CoreMidiDeviceProvider instead of MidiSystem to handle macOS
+    infos = CoreMidiDeviceProvider.getMidiDeviceInfo();
     for (int d = 0; d < infos.length; d++) {
       try {
         device = MidiSystem.getMidiDevice( infos[d] );
