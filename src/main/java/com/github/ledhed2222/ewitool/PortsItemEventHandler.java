@@ -28,12 +28,6 @@ package com.github.ledhed2222.ewitool;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequencer;
-import javax.sound.midi.Synthesizer;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -43,7 +37,13 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Sequencer;
+import javax.sound.midi.Synthesizer;
+import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceInfo;
+import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceProvider;
 
 public class PortsItemEventHandler implements EventHandler<ActionEvent> {
   
@@ -77,21 +77,21 @@ public class PortsItemEventHandler implements EventHandler<ActionEvent> {
     int ipIx = -1, opIx = -1;
     
     MidiDevice device;
-    MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+    MidiDevice.Info[] infos = CoreMidiDeviceProvider.getMidiDeviceInfo();
     for ( MidiDevice.Info info : infos ) {
       try {
         device = MidiSystem.getMidiDevice( info );
         if (!( device instanceof Sequencer ) && !( device instanceof Synthesizer )) {
           if (device.getMaxReceivers() != 0) {
             opIx++;
-            outPorts.add( info.getName() );
+            outPorts.add(getDisplayName(info));
             if (info.getName().equals( lastOutDevice )) {
               outView.getSelectionModel().clearAndSelect( opIx );
             }
             Debugger.log( "DEBUG - Found OUT Port: " + info.getName() + " - " + info.getDescription() );
           } else if (device.getMaxTransmitters() != 0) {
             ipIx++;
-            inPorts.add( info.getName() );
+            inPorts.add(getDisplayName(info));
             if (info.getName().equals( lastInDevice )) {
               inView.getSelectionModel().clearAndSelect( ipIx );
             }
@@ -119,4 +119,10 @@ public class PortsItemEventHandler implements EventHandler<ActionEvent> {
     }
   }
 
+  private String getDisplayName(MidiDevice.Info device) {
+      if (device instanceof CoreMidiDeviceInfo) {
+        return ((CoreMidiDeviceInfo) device).getDeviceName();
+      }
+      return device.getName();
+  }
 }
