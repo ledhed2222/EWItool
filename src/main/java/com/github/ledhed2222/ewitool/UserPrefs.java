@@ -35,10 +35,7 @@ public class UserPrefs {
   private static final String MIDI_IN_PORT = "MIDI_IN_PORT";
   private static final String MIDI_OUT_PORT = "MIDI_OUT_PORT";
   private static final String LIBRARY_LOCATION = "LIBRARY_LOCATION";
-  private static final String EPX_HOST = "EPX_HOST";
-  private static final String EPX_USERID = "EPX_USERID";
-  private static final String EPX_PASSWORD = "EPX_PASSWORD";
-  
+
   private static final String EXPORT_SUBDIR = "export";
   
   UserPrefs() {
@@ -78,26 +75,7 @@ public class UserPrefs {
     return getLibraryLocation() + System.getProperty( "file.separator" ) + 
            EXPORT_SUBDIR;
   }
-  
-  public String getEpxHost() {
-    return p.get( EPX_HOST, "<Not Set>" );
-  }
-  public void setEpxHost( String host ) {
-    p.put( EPX_HOST, host );
-  }
-  public String getEpxUserid() {
-    return p.get( EPX_USERID, "<Not Set>" );
-  }
-  public void setEpxUserid( String user ) {
-    p.put( EPX_USERID, user );
-  }
-  public String getEpxPassword() {
-    return p.get( EPX_PASSWORD, "<Not Set>" );
-  }
-  public void setEpxPassword( String pwd ) {
-    p.put( EPX_PASSWORD, pwd );
-  }
-  
+
   public boolean clearPrefs() {
     try {
       p.clear();
@@ -106,7 +84,5 @@ public class UserPrefs {
     }
     return true;
   }
-  
-  
 
 }
