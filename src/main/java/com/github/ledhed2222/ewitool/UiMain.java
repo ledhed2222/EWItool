@@ -17,7 +17,6 @@
 
 package com.github.ledhed2222.ewitool;
 
-import java.io.File;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -49,7 +48,6 @@ public class UiMain extends Application {
   private static final int     SCENE_PREF_WIDTH = 1100;
   private static final int     SCENE_PREF_HEIGHT = 750;
   private static final String  WINDOW_TITLE = APP_NAME + " - EWI4000s Patch Handling Tool";
-  private static final String  USER_CSS = "user.css";
   private static final String  ONLINE_HELP = "https://github.com/ledhed2222/EWItool/wiki/Using-EWItool";
 
   public enum Status { OK, ALREADY_EXISTS, NO_PERMISSION }
@@ -78,17 +76,7 @@ public class UiMain extends Application {
 
     sharedData = new SharedData();  // Create this 1st - holds all info shared across objects
 
-    // if the user Library Location preference is set and a file called USER_CSS exists
-    // in it, then load this extra stylesheet after the standard one
     UserPrefs userPrefs = new UserPrefs();
-    String libLoc = userPrefs.getLibraryLocation();
-    if (!libLoc.equals( "<Not Chosen>")) {
-        String uCSS = libLoc + System.getProperty( "file.separator") + USER_CSS;
-        File userCSSfile = new File(uCSS);
-        if (userCSSfile.exists()) {
-            scene.getStylesheets().add("file:///" + userCSSfile.getAbsolutePath().replace("\\", "/"));
-        }
-    }
     ScratchPad scratchPad = new ScratchPad( sharedData, userPrefs );
 
     statusBar = new UiStatusBar( sharedData );
