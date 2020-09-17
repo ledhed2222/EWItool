@@ -50,7 +50,7 @@ public class UiMain extends Application {
   private static final int     SCENE_PREF_HEIGHT = 750;
   private static final String  WINDOW_TITLE = APP_NAME + " - EWI4000s Patch Handling Tool";
   private static final String  USER_CSS = "user.css";
-  private static final String  ONLINE_HELP = "https://github.com/SMerrony/EWItool/wiki/Using-EWItool";
+  private static final String  ONLINE_HELP = "https://github.com/ledhed2222/EWItool/wiki/Using-EWItool";
 
   public enum Status { OK, ALREADY_EXISTS, NO_PERMISSION }
   
