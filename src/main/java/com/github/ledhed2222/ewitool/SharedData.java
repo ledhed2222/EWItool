@@ -17,6 +17,7 @@
 
 package com.github.ledhed2222.ewitool;
 
+import javax.sound.midi.MidiDevice;
 import java.util.Observable;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -61,7 +62,7 @@ public class SharedData extends Observable {
   BlockingQueue<SendMsg> sendQ;
   BlockingQueue<MidiMonitorMessage> monitorQ;
   
-  private String midiInDev, midiOutDev;
+  private MidiDevice.Info midiInDev, midiOutDev;
   
   SharedData() {
     lastPatchLoaded = NONE;
@@ -77,8 +78,8 @@ public class SharedData extends Observable {
     sendQ = new LinkedBlockingQueue<>();
     monitorQ = new LinkedBlockingQueue<>();
     ewiAttached = false;
-    midiInDev = "[Not set]";
-    midiOutDev = "[Not set]";
+    midiInDev = null;
+    midiOutDev = null;
     statusMessage = "";
     statusMillis = 0L;
     scratchPadCount = 0;
@@ -100,10 +101,19 @@ public class SharedData extends Observable {
     }
   }
 
-  public String getMidiInDev() { return midiInDev; }
-  public void setMidiInDev( String dev ) { midiInDev = dev; setChanged(); notifyObservers(); }
-  public String getMidiOutDev() { return midiOutDev; }
-  public void setMidiOutDev( String dev ) { midiOutDev = dev; setChanged(); notifyObservers(); }
+  public MidiDevice.Info getMidiInDev() { return midiInDev; }
+  public void setMidiInDev(MidiDevice.Info dev) {
+    midiInDev = dev;
+    setChanged();
+    notifyObservers();
+  }
+
+  public MidiDevice.Info getMidiOutDev() { return midiOutDev; }
+  public void setMidiOutDev(MidiDevice.Info dev) {
+    midiOutDev = dev;
+    setChanged();
+    notifyObservers();
+  }
   
   public int getScratchPadCount() { return scratchPadCount; }
   public void setScratchPadCount( int count ) { scratchPadCount = count; setChanged(); notifyObservers(); }

@@ -25,6 +25,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
+import javax.sound.midi.MidiDevice;
+
 /**
  * @author steve
  *
@@ -38,7 +40,8 @@ public class UiStatusBar extends HBox implements Observer {
   SharedData sharedData;
   
   private static final long MESSAGE_TIMEOUT_MS = 10 * 1000;  // minimum 10s timeout for textual message
-  
+  private static final String MIDI_NOT_SET_LABEL = "[Not set]";
+
   UiStatusBar(SharedData pSharedData) {
     sharedData = pSharedData;
     setId( "status-bar" );
@@ -74,8 +77,8 @@ public class UiStatusBar extends HBox implements Observer {
    */
   @Override
   public void update( Observable o, Object arg ) {
-    midiInLabel.setText( sharedData.getMidiInDev() );
-    midiOutLabel.setText( sharedData.getMidiOutDev() );
+    midiInLabel.setText(getNormalizedDisplayName(sharedData.getMidiInDev()));
+    midiOutLabel.setText(getNormalizedDisplayName(sharedData.getMidiOutDev()));
     if (sharedData.getEwiAttached()) {
       ewiLabel.setText( "EWI4000s" );
     } else {
@@ -87,5 +90,12 @@ public class UiStatusBar extends HBox implements Observer {
     } else {
       messageLabel.setText( sharedData.getStatusMessage() );
     }
+  }
+
+  private String getNormalizedDisplayName(MidiDevice.Info device) {
+    if (device == null) {
+      return MIDI_NOT_SET_LABEL;
+    }
+    return MidiHandler.getMidiDeviceDisplayName(device);
   }
 }
