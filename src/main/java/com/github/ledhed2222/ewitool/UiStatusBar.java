@@ -25,6 +25,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
+import javax.sound.midi.MidiDevice;
+
 /**
  * @author steve
  *
@@ -34,11 +36,12 @@ import javafx.scene.layout.Region;
  */
 public class UiStatusBar extends HBox implements Observer {
   
-  Label messageLabel, midiInLabel, midiOutLabel, ewiLabel, scratchPadLabel, epxLabel;
+  Label messageLabel, midiInLabel, midiOutLabel, ewiLabel, scratchPadLabel;
   SharedData sharedData;
   
   private static final long MESSAGE_TIMEOUT_MS = 10 * 1000;  // minimum 10s timeout for textual message
-  
+  private static final String MIDI_NOT_SET_LABEL = "[Not set]";
+
   UiStatusBar(SharedData pSharedData) {
     sharedData = pSharedData;
     setId( "status-bar" );
@@ -51,8 +54,6 @@ public class UiStatusBar extends HBox implements Observer {
     ewiLabel.setId( "status-value" );
     scratchPadLabel = new Label();
     scratchPadLabel.setId( "status-value" );
-    epxLabel = new Label();
-    epxLabel.setId( "status-value" );
     Region spacerRegion = new Region();
     HBox.setHgrow( spacerRegion, Priority.ALWAYS );
     messageLabel = new Label();
@@ -62,7 +63,6 @@ public class UiStatusBar extends HBox implements Observer {
                           new Label( "MIDI Out:" ), midiOutLabel,
                           new Label( "EWI:" ), ewiLabel,
                           new Label( "Scratchpad Items:" ), scratchPadLabel,
-                          new Label( "EPX:" ), epxLabel,
                           spacerRegion,
                           messageLabel
                         );
@@ -77,23 +77,25 @@ public class UiStatusBar extends HBox implements Observer {
    */
   @Override
   public void update( Observable o, Object arg ) {
-    midiInLabel.setText( sharedData.getMidiInDev() );
-    midiOutLabel.setText( sharedData.getMidiOutDev() );
+    midiInLabel.setText(getNormalizedDisplayName(sharedData.getMidiInDev()));
+    midiOutLabel.setText(getNormalizedDisplayName(sharedData.getMidiOutDev()));
     if (sharedData.getEwiAttached()) {
       ewiLabel.setText( "EWI4000s" );
     } else {
       ewiLabel.setText( "Not detected" );
     }
     scratchPadLabel.setText( Integer.toString( sharedData.getScratchPadCount() ) );
-    if (sharedData.getEpxAvailable()) {
-      epxLabel.setText( "Available" );
-    } else {
-      epxLabel.setText( "Not connected" );
-    }
     if (System.currentTimeMillis() - sharedData.getStatusMillis() > MESSAGE_TIMEOUT_MS ) {
       messageLabel.setText( "" );
     } else {
       messageLabel.setText( sharedData.getStatusMessage() );
     }
+  }
+
+  private String getNormalizedDisplayName(MidiDevice.Info device) {
+    if (device == null) {
+      return MIDI_NOT_SET_LABEL;
+    }
+    return MidiHandler.getMidiDeviceDisplayName(device);
   }
 }

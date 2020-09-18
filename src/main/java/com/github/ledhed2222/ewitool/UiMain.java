@@ -17,7 +17,6 @@
 
 package com.github.ledhed2222.ewitool;
 
-import java.io.File;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -39,7 +38,7 @@ import javafx.scene.layout.BorderPane;
 public class UiMain extends Application {
 
   static final String  APP_NAME = "EWItool";
-  static final String  APP_VERSION = "2.2.1";
+  static final String  APP_VERSION = "2.3.0";
   static final int     COPYRIGHT_YEAR = 2020;
   static final String  RELEASE_STATUS = "Production";
   static final String  LEAD_AUTHOR = "S.Merrony & ledhed2222";
@@ -49,15 +48,14 @@ public class UiMain extends Application {
   private static final int     SCENE_PREF_WIDTH = 1100;
   private static final int     SCENE_PREF_HEIGHT = 750;
   private static final String  WINDOW_TITLE = APP_NAME + " - EWI4000s Patch Handling Tool";
-  private static final String  USER_CSS = "user.css";
-  private static final String  ONLINE_HELP = "https://github.com/SMerrony/EWItool/wiki/Using-EWItool";
+  private static final String  ONLINE_HELP = "https://github.com/ledhed2222/EWItool/wiki/Using-EWItool";
 
   public enum Status { OK, ALREADY_EXISTS, NO_PERMISSION }
   
   MenuBar mainMenuBar;
   Menu patchMenu;
   TabPane tabPane;
-  Tab scratchPadTab, patchSetsTab, epxTab, currentPatchSetTab, keyPatchesTab, patchEditorTab; 
+  Tab scratchPadTab, patchSetsTab, currentPatchSetTab, patchEditorTab;
   UiStatusBar statusBar;
   MidiHandler midiHandler;
   volatile SharedData sharedData;
@@ -78,17 +76,7 @@ public class UiMain extends Application {
 
     sharedData = new SharedData();  // Create this 1st - holds all info shared across objects
 
-    // if the user Library Location preference is set and a file called USER_CSS exists
-    // in it, then load this extra stylesheet after the standard one
     UserPrefs userPrefs = new UserPrefs();
-    String libLoc = userPrefs.getLibraryLocation();
-    if (!libLoc.equals( "<Not Chosen>")) {
-        String uCSS = libLoc + System.getProperty( "file.separator") + USER_CSS;
-        File userCSSfile = new File(uCSS);
-        if (userCSSfile.exists()) {
-            scene.getStylesheets().add("file:///" + userCSSfile.getAbsolutePath().replace("\\", "/"));
-        }
-    }
     ScratchPad scratchPad = new ScratchPad( sharedData, userPrefs );
 
     statusBar = new UiStatusBar( sharedData );
@@ -102,25 +90,20 @@ public class UiMain extends Application {
 
     tabPane = new TabPane();
 
-    epxTab = new EPXTab( sharedData, scratchPad, userPrefs );
-    scratchPadTab = new ScratchPadTab( sharedData, scratchPad, epxTab );
+    scratchPadTab = new ScratchPadTab( sharedData, scratchPad );
     patchEditorTab = new PatchEditorTab( sharedData, scratchPad, midiHandler );
     currentPatchSetTab = new CurrentPatchSetTab( sharedData, scratchPad, midiHandler, patchEditorTab );
     patchSetsTab = new PatchSetsTab( sharedData, scratchPad, userPrefs, midiHandler, currentPatchSetTab );   
-    keyPatchesTab = new KeyPatchesTab( sharedData, midiHandler );     
 
     tabPane.getTabs().addAll( scratchPadTab, 
                               patchSetsTab, 
-                              epxTab, 
-                              currentPatchSetTab, 
-                              patchEditorTab, 
-                              keyPatchesTab 
+                              currentPatchSetTab,
+                              patchEditorTab
                             );
 
     currentPatchSetTab.setDisable( true );
     // FIXME Uncomment before release    patchEditorTab.setDisable( true );
     patchEditorTab.setDisable( true );
-    keyPatchesTab.setDisable( true );
 
     tabPane.getSelectionModel().selectedItemProperty().addListener( (tab, oldtab, newtab) -> {
       if (newtab == patchEditorTab) patchMenu.setDisable( false );
@@ -211,7 +194,6 @@ public class UiMain extends Application {
           ((PatchEditorTab) patchEditorTab).populateCombo( sharedData );
           currentPatchSetTab.setDisable( false );
           patchEditorTab.setDisable( false );
-          keyPatchesTab.setDisable( false );
           tabPane.getSelectionModel().select( currentPatchSetTab );
         }
       });

@@ -36,22 +36,15 @@ import javafx.scene.layout.RowConstraints;
 public class ScratchPadTab extends Tab {
 
   Button clearButton, deleteButton, renameButton, 
-  viewHexButton, exchangeButton, exportButton;
+  viewHexButton, exportButton;
   ListView<EWI4000sPatch> patchList;
 
-  ScratchPadTab( SharedData sharedData, ScratchPad scratchPad, Tab epxTab ) {
+  ScratchPadTab(SharedData sharedData, ScratchPad scratchPad) {
 
     setText( "Scratchpad" );
     setClosable( false );
 
     scratchPad.load();
-//    if (!scratchPad.load()) {
-//      Alert warnAlert = new Alert( AlertType.WARNING );
-//      warnAlert.setTitle( "EWItool - Warning" );
-//      warnAlert.setContentText( "Cannot load Scratchpad.  It could be that the Library Path is not set or the directory is inaccessible.  " + 
-//          "Please check the location on the Patch Set Library tab before continuing." );
-//      warnAlert.showAndWait();
-//    }
 
     GridPane gp = new GridPane();
     gp.setMaxHeight( Double.MAX_VALUE );
@@ -128,14 +121,6 @@ public class ScratchPadTab extends Tab {
       }
     } ); 
     gp.add( viewHexButton, 1, 1 );
-
-    exchangeButton = new Button( "Add to EWI Patch eXchange" );
-    exchangeButton.setOnAction( (ae) -> {
-      if (patchList.getSelectionModel().getSelectedIndex() != -1) {
-        ((EPXTab) epxTab).contribute( patchList.getSelectionModel().getSelectedItem() );
-      }
-    });
-    gp.add( exchangeButton, 2, 1 );
 
     exportButton = new Button( "Export" );
     exportButton.setOnAction( (ae) -> {

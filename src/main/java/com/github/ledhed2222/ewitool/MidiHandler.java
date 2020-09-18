@@ -23,9 +23,11 @@ package com.github.ledhed2222.ewitool;
 import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
+
+import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceInfo;
+import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceProvider;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequencer;
@@ -88,6 +90,14 @@ public class MidiHandler {
   
   MidiDevice.Info[] infos;
 
+  // @return display name of a MIDI device
+  public static String getMidiDeviceDisplayName(MidiDevice.Info device) {
+    if (device instanceof CoreMidiDeviceInfo) {
+      return ((CoreMidiDeviceInfo) device).getDeviceName();
+    }
+    return device.getName();
+  }
+
   MidiHandler( SharedData pSharedData, UserPrefs pUserPrefs ) {
 
     sharedData = pSharedData;
@@ -96,7 +106,7 @@ public class MidiHandler {
     
     /** 
      * This task was introduced to work around a hang on OS X in
-     * the CoreMidi4J v0.4 MidiSystem.getMidiDeviceInfo() call which 
+     * the CoreMidi4J v0.4 MidiSystem.getMidiDeviceInfo() call which
      * seems to encounter a resource lock if run on the main thread.
      */
     Task<Void> mt = new Task<Void>() {
@@ -132,18 +142,19 @@ public class MidiHandler {
    * either the IN or OUT port set in UserPrefs then open it.
    */
   private void scanAndOpenMIDIPorts() {
-    
     MidiDevice device;
-    
-    infos = MidiSystem.getMidiDeviceInfo();
-    for (int d = 0; d < infos.length; d++) {
+
+    infos = CoreMidiDeviceProvider.getMidiDeviceInfo();
+    for (MidiDevice.Info info : infos) {
       try {
-        device = MidiSystem.getMidiDevice( infos[d] );
+        device = MidiSystem.getMidiDevice(info);
+        String displayName = MidiHandler.getMidiDeviceDisplayName(info);
+
         if (!(device instanceof Sequencer) && !(device instanceof Synthesizer)) {
           if (device.getMaxReceivers() != 0) {
-            if (infos[d].getName().equals( userPrefs.midiOutPort.getValue() )) {
+            if (displayName.equals(userPrefs.midiOutPort.getValue())) {
               try {
-                outDev = MidiSystem.getMidiDevice( infos[d] );
+                outDev = MidiSystem.getMidiDevice(info);
               } catch( MidiUnavailableException e ) {
                 e.printStackTrace();
                 errAlert( "Error - MidiHandler() could not obtain chosen MIDI OUT device info" );
@@ -157,17 +168,17 @@ public class MidiHandler {
               if (outDev.isOpen()) {
                 (sendThread = new Thread( new MidiSender( sharedData, outDev ) )).start();
                 sendThread.setName( "EWItool MIDI Sender" );
-                Debugger.log( "Debug - OUT Port: " + infos[d].getName());
-                final String outName = infos[d].getName();
-                Platform.runLater( () -> sharedData.setMidiOutDev( outName ) );
+                Debugger.log( "Debug - OUT Port: " + info.getName());
+                final MidiDevice.Info outDevice = info;
+                Platform.runLater( () -> sharedData.setMidiOutDev(outDevice) );
               } else {
-                Debugger.log( "Debug - Could not open OUT Port: " + infos[d].getName());
+                Debugger.log( "Debug - Could not open OUT Port: " + info.getName());
               }
             }
           } else if (device.getMaxTransmitters() != 0) {
-            if (infos[d].getName().equals( userPrefs.midiInPort.getValue() )) {
+            if (displayName.equals(userPrefs.midiInPort.getValue())) {
               try {
-                inDev = MidiSystem.getMidiDevice( infos[d] );
+                inDev = MidiSystem.getMidiDevice(info);
               } catch( MidiUnavailableException e ) {
                 e.printStackTrace();
                 errAlert( "Error - MidiHandler() could not obtain chosen MIDI IN device info" );
@@ -180,9 +191,9 @@ public class MidiHandler {
               }
               midiIn = new MidiReceiver( sharedData );
               inDev.getTransmitter().setReceiver( midiIn );
-              Debugger.log( "Debug - IN Port: " + infos[d].getName() );
-              final String inName = infos[d].getName();
-              Platform.runLater( () -> sharedData.setMidiInDev( inName ) );
+              Debugger.log( "Debug - IN Port: " + info.getName() );
+              final MidiDevice.Info inDevice = info;
+              Platform.runLater( () -> sharedData.setMidiInDev(inDevice) );
             }
           }
         }  
