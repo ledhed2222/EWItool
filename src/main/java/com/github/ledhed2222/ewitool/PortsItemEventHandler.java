@@ -42,7 +42,6 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Synthesizer;
-import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceInfo;
 import uk.co.xfactorylibrarians.coremidi4j.CoreMidiDeviceProvider;
 
 public class PortsItemEventHandler implements EventHandler<ActionEvent> {
@@ -55,7 +54,6 @@ public class PortsItemEventHandler implements EventHandler<ActionEvent> {
 
   @Override
   public void handle( ActionEvent arg0 ) {
-    
     Dialog<ButtonType> dialog = new Dialog<>();
     dialog.setTitle( "EWItool - Select MIDI Ports" );
     dialog.getDialogPane().getButtonTypes().addAll( ButtonType.CANCEL, ButtonType.OK );
@@ -63,11 +61,11 @@ public class PortsItemEventHandler implements EventHandler<ActionEvent> {
     
     gp.add( new Label( "MIDI In Ports" ), 0, 0 );
     gp.add( new Label( "MIDI Out Ports" ), 1, 0 );
-    
+
     ListView<String> inView, outView;
     List<String> inPortList = new ArrayList<>(),
                  outPortList = new ArrayList<>();
-    ObservableList<String> inPorts = FXCollections.observableArrayList( inPortList ), 
+    ObservableList<String> inPorts = FXCollections.observableArrayList( inPortList ),
                            outPorts = FXCollections.observableArrayList( outPortList );
     inView = new ListView<>( inPorts );
     outView = new ListView<>( outPorts );
@@ -80,20 +78,21 @@ public class PortsItemEventHandler implements EventHandler<ActionEvent> {
     MidiDevice.Info[] infos = CoreMidiDeviceProvider.getMidiDeviceInfo();
     for ( MidiDevice.Info info : infos ) {
       try {
-        device = MidiSystem.getMidiDevice( info );
+        device = MidiSystem.getMidiDevice(info);
+        String displayName = MidiHandler.getMidiDeviceDisplayName(info);
         if (!( device instanceof Sequencer ) && !( device instanceof Synthesizer )) {
           if (device.getMaxReceivers() != 0) {
             opIx++;
-            outPorts.add(getDisplayName(info));
-            if (info.getName().equals( lastOutDevice )) {
-              outView.getSelectionModel().clearAndSelect( opIx );
+            outPorts.add(displayName);
+            if (displayName.equals(lastOutDevice)) {
+              outView.getSelectionModel().clearAndSelect(opIx);
             }
             Debugger.log( "DEBUG - Found OUT Port: " + info.getName() + " - " + info.getDescription() );
           } else if (device.getMaxTransmitters() != 0) {
             ipIx++;
-            inPorts.add(getDisplayName(info));
-            if (info.getName().equals( lastInDevice )) {
-              inView.getSelectionModel().clearAndSelect( ipIx );
+            inPorts.add(displayName);
+            if (displayName.equals(lastInDevice)) {
+              inView.getSelectionModel().clearAndSelect(ipIx);
             }
             Debugger.log( "DEBUG - Found IN Port: " + info.getName() + " - " + info.getDescription() );
           }
@@ -111,18 +110,12 @@ public class PortsItemEventHandler implements EventHandler<ActionEvent> {
     
     if (rc.get() == ButtonType.OK) {
       if (outView.getSelectionModel().getSelectedIndex() != -1) {
-        userPrefs.setMidiOutPort( outView.getSelectionModel().getSelectedItem() );
+        userPrefs.setMidiOutPort(outView.getSelectionModel().getSelectedItem());
       }
       if (inView.getSelectionModel().getSelectedIndex() != -1) {
-        userPrefs.setMidiInPort( inView.getSelectionModel().getSelectedItem() );
+        userPrefs.setMidiInPort(inView.getSelectionModel().getSelectedItem());
       } 
     }
   }
 
-  private String getDisplayName(MidiDevice.Info device) {
-      if (device instanceof CoreMidiDeviceInfo) {
-        return ((CoreMidiDeviceInfo) device).getDeviceName();
-      }
-      return device.getName();
-  }
 }
