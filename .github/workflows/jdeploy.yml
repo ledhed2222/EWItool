@@ -22,6 +22,10 @@ jobs:
           java-version: '23'
           distribution: 'temurin'
           cache: maven
+      - name: Set up git
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
       - name: Build with Maven
         run: mvn -B package --file pom.xml
       - name: Build App Installer Bundles
