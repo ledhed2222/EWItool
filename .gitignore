@@ -3,12 +3,10 @@
 /EWItool/dist/
 /EWItool/*
 
-
-# Ignore Gradle project-specific cache directory
-.gradle
-
-# Ignore Gradle build output directory
-build
+# Ignore Maven build output directory
+target
 
 # macos artifacts
 .DS_Store
+
+.idea/*
