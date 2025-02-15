@@ -6,6 +6,7 @@ name: jDeploy CI with Maven
 on:
   push:
     branches: ['master']
+  workflow_dispatch:
 
 jobs:
   build:
