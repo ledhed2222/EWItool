@@ -17,3 +17,11 @@ Create a release branch. Merge into it. Bump the version in the following places
 `package.json` both the `version` and `jdeploy.jar` fields
 
 Merge into master
+
+### Bumping java version
+
+Update version in 
+
+`.github/workflows/jdeploy.yml`
+`pom.xml`
+`package.json`
