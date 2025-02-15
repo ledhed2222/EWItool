@@ -25,3 +25,11 @@ Update version in
 `.github/workflows/jdeploy.yml`
 `pom.xml`
 `package.json`
+`.java-version`
+
+### Changing icon
+
+Change binaries in:
+
+`icon.png`
+`src/main/resources/logo.png`
