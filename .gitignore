@@ -9,4 +9,4 @@ target
 # macos artifacts
 .DS_Store
 
-.idea/*
+.idea/
