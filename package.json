@@ -15,7 +15,7 @@
     "javafx": true,
     "title": "EWItool"
   },
-  "dependencies":
+  "dependencies": {
     "njre": "^0.2.0",
     "shelljs": "^0.8.4"
   },
