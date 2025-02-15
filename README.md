@@ -9,3 +9,11 @@ This version has been tested on macOS Catalina, but *should* run on any reasonab
 
 The latest version may always be downloaded [here](https://github.com/ledhed2222/EWItool/releases).
 
+## Deployment
+
+Create a release branch. Merge into it. Bump the version in the following places:
+
+`pom.xml`
+`package.json` both the `version` and `jdeploy.jar` fields
+
+Merge into master
