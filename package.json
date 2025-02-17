@@ -9,7 +9,7 @@
     "jdeploy": {
         "jdk": false,
         "javaVersion": "17",
-        "jar": "target/EWItool-2.4.2.jar",
+        "jar": "target/EWItool-2.4.3.jar",
         "javafx": true,
         "title": "EWItool"
     },
