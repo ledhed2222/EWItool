@@ -5,12 +5,13 @@
     "main": "index.js",
     "preferGlobal": true,
     "repository": "https://github.com/ledhed2222/EWItool",
-    "version": "2.4.1",
+    "version": "2.4.2",
     "jdeploy": {
-        "jdk": true,
+        "jdk": false,
         "javaVersion": "17",
-        "jar": "target/EWItool-2.4.1.jar",
+        "jar": "target/EWItool-2.4.2.jar",
         "javafx": true,
+        "bundles": ["mac-arm64"],
         "title": "EWItool"
     },
     "dependencies": {
