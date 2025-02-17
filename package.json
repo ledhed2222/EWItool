@@ -1,15 +1,15 @@
 {
-    "bin": {"EWItool-2-4-3": "jdeploy-bundle/jdeploy.js"},
+    "bin": {"EWItool-2-4-4": "jdeploy-bundle/jdeploy.js"},
     "author": "ledhed2222",
     "description": "Synth editor for Akai EWI 4000s",
     "main": "index.js",
     "preferGlobal": true,
     "repository": "https://github.com/ledhed2222/EWItool",
-    "version": "2.4.3",
+    "version": "2.4.4",
     "jdeploy": {
-        "jdk": false,
+        "jdk": true,
         "javaVersion": "17",
-        "jar": "target/EWItool-2.4.3.jar",
+        "jar": "target/EWItool-2.4.4.jar",
         "javafx": true,
         "title": "EWItool"
     },
