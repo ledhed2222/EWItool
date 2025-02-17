@@ -14,6 +14,7 @@ The latest version may always be downloaded [here](https://github.com/ledhed2222
 Create a release branch. Merge into it. Bump the version in the following places:
 
 `pom.xml`
+`UiMain.java`
 `package.json` both the `version` and `jdeploy.jar` fields
 
 Merge into master
