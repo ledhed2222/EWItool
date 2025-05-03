@@ -1,0 +1,109 @@
+name: Build Native Installers
+
+on:
+  push:
+    tags:
+      - 'v*'         # Only builds on version tags like v2.4.3
+  workflow_dispatch: # Manual trigger from the GitHub UI
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build .jar
+        run: mvn clean package
+
+      - name: Run jpackage for macOS
+        run: |
+          jpackage \
+            --type dmg \
+            --name EWItool \
+            --input target \
+            --main-jar EWItool-2.4.3.jar \
+            --main-class com.github.ledhed2222.ewitool.Main \
+            --dest target \
+            --app-version 2.4.3 \
+            --vendor "Ledhed2222"
+
+      - name: Upload macOS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: EWItool-macOS
+          path: target/*.dmg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build .jar
+        run: mvn clean package
+
+      - name: Run jpackage for Windows
+        run: |
+          jpackage ^
+            --type exe ^
+            --name EWItool ^
+            --input target ^
+            --main-jar EWItool-2.4.3.jar ^
+            --main-class com.github.ledhed2222.ewitool.Main ^
+            --dest target ^
+            --app-version 2.4.3 ^
+            --vendor "Ledhed2222"
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: EWItool-Windows
+          path: target/*.exe
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install jpackage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfreetype6-dev libasound2-dev fakeroot rpm
+
+      - name: Build .jar
+        run: mvn clean package
+
+      - name: Run jpackage for Linux
+        run: |
+          jpackage \
+            --type deb \
+            --name EWItool \
+            --input target \
+            --main-jar EWItool-2.4.3.jar \
+            --main-class com.github.ledhed2222.ewitool.Main \
+            --dest target \
+            --app-version 2.4.3 \
+            --vendor "Ledhed2222"
+
+      - name: Upload Linux installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: EWItool-Linux
+          path: target/*.deb
