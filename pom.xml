@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <!-- This module was also published with a richer model, Gradle metadata,  -->
-  <!-- which should be used instead. Do not delete the following line which  -->
-  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
-  <!-- that they should prefer consuming it instead. -->
-  <!-- do_not_remove: published-with-gradle-metadata -->
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.ledhed2222</groupId>
   <artifactId>EWItool</artifactId>
@@ -14,17 +9,14 @@
   <url>https://github.com/ledhed2222/EWItool</url>
 
   <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <javafx.version>17.0.14</javafx.version>
+    <javafx.version>21.0.7</javafx.version>
     <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>javax.xml.bind</groupId>
-      <artifactId>jaxb-api</artifactId>
-      <version>2.3.1</version>
-    </dependency>
     <dependency>
       <groupId>uk.co.xfactory-librarians</groupId>
       <artifactId>coremidi4j</artifactId>
@@ -90,6 +82,7 @@
           </archive>
         </configuration>
       </plugin>
+
     </plugins>
   </build>
 
