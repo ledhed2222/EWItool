@@ -33,8 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
-import javax.xml.bind.DatatypeConverter;
+import java.util.HexFormat;
 
 import com.github.ledhed2222.ewitool.UiMain.Status;
 
@@ -314,7 +313,7 @@ public class EWI4000sPatch {
    */
   EWI4000sPatch( String hexString ) {
     this();
-    patchBlob = DatatypeConverter.parseHexBinary( hexString );
+    patchBlob = HexFormat.of().parseHex( hexString );
     decodeBlob();
     setEmpty( false );
   }
