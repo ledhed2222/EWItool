@@ -33,11 +33,12 @@ jobs:
             --app-version 2.4.3 \
             --vendor "Ledhed2222"
 
-      - name: Upload macOS installer
-        uses: actions/upload-artifact@v4
+      - name: Upload to gh release
+        uses: softprops/action-gh-release@v1
         with:
-          name: EWItool-macOS
-          path: target/*.dmg
+          files: target/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   windows:
     runs-on: windows-latest
@@ -65,11 +66,12 @@ jobs:
             --app-version 2.4.3 ^
             --vendor "Ledhed2222"
 
-      - name: Upload Windows installer
-        uses: actions/upload-artifact@v4
+      - name: Upload to gh release
+        uses: softprops/action-gh-release@v1
         with:
-          name: EWItool-Windows
-          path: target/*.exe
+          files: target/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   linux:
     runs-on: ubuntu-latest
@@ -102,8 +104,9 @@ jobs:
             --app-version 2.4.3 \
             --vendor "Ledhed2222"
 
-      - name: Upload Linux installer
-        uses: actions/upload-artifact@v4
+      - name: Upload to gh release
+        uses: softprops/action-gh-release@v1
         with:
-          name: EWItool-Linux
-          path: target/*.deb
+          files: target/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
