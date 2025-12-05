@@ -110,8 +110,10 @@ jobs:
 
       - name: Extract version from pom.xml
         id: version
+        shell: pwsh
         run: |
-          $VERSION = mvn help:evaluate -Dexpression=project.version -q -DforceStdout
+          [xml]$pom = Get-Content pom.xml
+          $VERSION = $pom.project.version
           echo "version=$VERSION" >> $env:GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
