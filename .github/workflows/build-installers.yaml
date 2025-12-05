@@ -53,7 +53,7 @@ jobs:
       - name: Build .jar
         run: mvn clean package
 
-      - name: Run jpackage for macOS
+      - name: Build app bundle with jpackage
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
@@ -61,8 +61,9 @@ jobs:
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
           echo "Using certificate: $CERT_IDENTITY"
 
+          # First create just the app-image (app bundle), not DMG yet
           jpackage \
-            --type dmg \
+            --type app-image \
             --name EWItool \
             --input target \
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
@@ -70,16 +71,35 @@ jobs:
             --dest target \
             --app-version ${{ steps.version.outputs.version }} \
             --vendor "Ledhed2222" \
-            --icon src/main/resources/logo.icns \
-            --mac-sign \
-            --mac-signing-key-user-name "$CERT_IDENTITY"
+            --icon src/main/resources/logo.icns
 
-      - name: Sign DMG
+      - name: Sign app bundle with hardened runtime
         run: |
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+          # Sign all nested binaries, libraries, and frameworks with hardened runtime
+          find target/EWItool.app/Contents -type f \( -name "*.dylib" -o -name "*.jnilib" -o -perm +111 \) | while read file; do
+            echo "Signing: $file"
+            codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime "$file" || true
+          done
+
+          # Sign the app bundle itself
+          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --deep target/EWItool.app
 
           # Verify signature
+          codesign --verify --deep --strict --verbose=2 target/EWItool.app
+
+      - name: Create and sign DMG
+        run: |
+          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
+
+          # Create DMG from signed app bundle
+          hdiutil create -volname EWItool -srcfolder target/EWItool.app -ov -format UDZO target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+          # Sign the DMG
+          codesign --force --sign "$CERT_IDENTITY" --timestamp target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+          # Verify DMG signature
           codesign --verify --verbose=4 target/EWItool-${{ steps.version.outputs.version }}.dmg
 
       - name: Notarize DMG
@@ -88,18 +108,36 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          # Submit for notarization
-          xcrun notarytool submit target/EWItool-${{ steps.version.outputs.version }}.dmg \
+          # Submit for notarization and capture submission ID
+          SUBMIT_OUTPUT=$(xcrun notarytool submit target/EWItool-${{ steps.version.outputs.version }}.dmg \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --wait 2>&1)
 
-          # Staple the notarization ticket
-          xcrun stapler staple target/EWItool-${{ steps.version.outputs.version }}.dmg
+          echo "$SUBMIT_OUTPUT"
 
-          # Verify notarization
-          xcrun stapler validate target/EWItool-${{ steps.version.outputs.version }}.dmg
+          # Extract submission ID
+          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
+          echo "Submission ID: $SUBMISSION_ID"
+
+          # Check if notarization succeeded
+          if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
+            echo "Notarization succeeded!"
+
+            # Staple the notarization ticket
+            xcrun stapler staple target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+            # Verify notarization
+            xcrun stapler validate target/EWItool-${{ steps.version.outputs.version }}.dmg
+          else
+            echo "Notarization failed. Getting log..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_APP_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID"
+            exit 1
+          fi
 
       - name: Rename DMG
         run: |
