@@ -7,8 +7,8 @@ on:
   workflow_dispatch: # Manual trigger from the GitHub UI
 
 jobs:
-  mac:
-    runs-on: macos-latest
+  mac-intel:
+    runs-on: macos-13  # Intel runner
     steps:
       - uses: actions/checkout@v4
 
@@ -18,25 +18,82 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Extract version from pom.xml
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
       - name: Build .jar
         run: mvn clean package
 
-      - name: Run jpackage for macOS
+      - name: Run jpackage for macOS Intel
         run: |
           jpackage \
             --type dmg \
             --name EWItool \
             --input target \
-            --main-jar EWItool-2.4.3.jar \
+            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
-            --app-version 2.4.3 \
-            --vendor "Ledhed2222"
+            --app-version ${{ steps.version.outputs.version }} \
+            --vendor "Ledhed2222" \
+            --icon src/main/resources/logo.icns
+
+      - name: Rename DMG to include architecture
+        run: |
+          mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos-intel.dmg
 
       - name: Upload to gh release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/*.dmg
+          files: target/*-macos-intel.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  mac-silicon:
+    runs-on: macos-latest  # ARM runner (M1/M2)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Extract version from pom.xml
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build .jar
+        run: mvn clean package
+
+      - name: Run jpackage for macOS Silicon
+        run: |
+          jpackage \
+            --type dmg \
+            --name EWItool \
+            --input target \
+            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
+            --main-class com.github.ledhed2222.ewitool.Main \
+            --dest target \
+            --app-version ${{ steps.version.outputs.version }} \
+            --vendor "Ledhed2222" \
+            --icon src/main/resources/logo.icns
+
+      - name: Rename DMG to include architecture
+        run: |
+          mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos-silicon.dmg
+
+      - name: Upload to gh release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/*-macos-silicon.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -51,20 +108,36 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Extract version from pom.xml
+        id: version
+        run: |
+          $VERSION = mvn help:evaluate -Dexpression=project.version -q -DforceStdout
+          echo "version=$VERSION" >> $env:GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
       - name: Build .jar
         run: mvn clean package
 
+      - name: Convert PNG to ICO for Windows
+        run: |
+          # jpackage will use PNG on Windows if ICO not available
+          # We'll use the PNG file directly
+
       - name: Run jpackage for Windows
         run: |
-          jpackage ^
-            --type exe ^
-            --name EWItool ^
-            --input target ^
-            --main-jar EWItool-2.4.3.jar ^
-            --main-class com.github.ledhed2222.ewitool.Main ^
-            --dest target ^
-            --app-version 2.4.3 ^
-            --vendor "Ledhed2222"
+          jpackage `
+            --type exe `
+            --name EWItool `
+            --input target `
+            --main-jar EWItool-${{ steps.version.outputs.version }}.jar `
+            --main-class com.github.ledhed2222.ewitool.Main `
+            --dest target `
+            --app-version ${{ steps.version.outputs.version }} `
+            --vendor "Ledhed2222" `
+            --icon src/main/resources/logo.png `
+            --win-dir-chooser `
+            --win-menu `
+            --win-shortcut
 
       - name: Upload to gh release
         uses: softprops/action-gh-release@v1
@@ -84,6 +157,13 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Extract version from pom.xml
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
       - name: Install jpackage dependencies
         run: |
           sudo apt-get update
@@ -92,21 +172,39 @@ jobs:
       - name: Build .jar
         run: mvn clean package
 
-      - name: Run jpackage for Linux
+      - name: Run jpackage for Linux (DEB)
         run: |
           jpackage \
             --type deb \
-            --name EWItool \
+            --name ewitool \
             --input target \
-            --main-jar EWItool-2.4.3.jar \
+            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
-            --app-version 2.4.3 \
-            --vendor "Ledhed2222"
+            --app-version ${{ steps.version.outputs.version }} \
+            --vendor "Ledhed2222" \
+            --icon src/main/resources/logo.png \
+            --linux-shortcut
+
+      - name: Run jpackage for Linux (RPM)
+        run: |
+          jpackage \
+            --type rpm \
+            --name ewitool \
+            --input target \
+            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
+            --main-class com.github.ledhed2222.ewitool.Main \
+            --dest target \
+            --app-version ${{ steps.version.outputs.version }} \
+            --vendor "Ledhed2222" \
+            --icon src/main/resources/logo.png \
+            --linux-shortcut
 
       - name: Upload to gh release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/*.deb
+          files: |
+            target/*.deb
+            target/*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
