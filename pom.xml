@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.ledhed2222</groupId>
   <artifactId>EWItool</artifactId>
-  <version>2.5.1</version>
+  <version>2.6.0</version>
   <name>EWItool</name>
   <url>https://github.com/ledhed2222/EWItool</url>
 
@@ -12,8 +12,10 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <javafx.version>21.0.7</javafx.version>
+    <javafx.version>23.0.2</javafx.version>
     <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+    <maven.dependency.plugin.version>3.9.0</maven.dependency.plugin.version>
+    <maven.jar.plugin.version>3.5.0</maven.jar.plugin.version>
     <mainClass>com.github.ledhed2222.ewitool.Main</mainClass>
   </properties>
 
@@ -73,6 +75,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven.dependency.plugin.version}</version>
         <executions>
           <execution>
             <id>copy-dependencies</id>
@@ -91,7 +94,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.1</version>
+        <version>${maven.jar.plugin.version}</version>
         <configuration>
           <archive>
             <manifest>
