@@ -25,11 +25,42 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
+      - name: Import Code Signing Certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Decode certificate
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Enable codesigning from a non user interactive shell
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
       - name: Build .jar
         run: mvn clean package
 
       - name: Run jpackage for macOS
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          # Get the certificate identity name
+          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
+          echo "Using certificate: $CERT_IDENTITY"
+
           jpackage \
             --type dmg \
             --name EWItool \
@@ -39,7 +70,36 @@ jobs:
             --dest target \
             --app-version ${{ steps.version.outputs.version }} \
             --vendor "Ledhed2222" \
-            --icon src/main/resources/logo.icns
+            --icon src/main/resources/logo.icns \
+            --mac-sign \
+            --mac-signing-key-user-name "$CERT_IDENTITY"
+
+      - name: Sign DMG
+        run: |
+          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
+          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+          # Verify signature
+          codesign --verify --verbose=4 target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Submit for notarization
+          xcrun notarytool submit target/EWItool-${{ steps.version.outputs.version }}.dmg \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          # Staple the notarization ticket
+          xcrun stapler staple target/EWItool-${{ steps.version.outputs.version }}.dmg
+
+          # Verify notarization
+          xcrun stapler validate target/EWItool-${{ steps.version.outputs.version }}.dmg
 
       - name: Rename DMG
         run: |
