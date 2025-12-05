@@ -7,8 +7,8 @@ on:
   workflow_dispatch: # Manual trigger from the GitHub UI
 
 jobs:
-  mac-intel:
-    runs-on: macos-13  # Intel runner
+  macos:
+    runs-on: macos-latest  # ARM runner (Apple Silicon, works on Intel via Rosetta 2)
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +28,7 @@ jobs:
       - name: Build .jar
         run: mvn clean package
 
-      - name: Run jpackage for macOS Intel
+      - name: Run jpackage for macOS
         run: |
           jpackage \
             --type dmg \
@@ -41,59 +41,14 @@ jobs:
             --vendor "Ledhed2222" \
             --icon src/main/resources/logo.icns
 
-      - name: Rename DMG to include architecture
+      - name: Rename DMG
         run: |
-          mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos-intel.dmg
+          mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos.dmg
 
       - name: Upload to gh release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/*-macos-intel.dmg
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  mac-silicon:
-    runs-on: macos-latest  # ARM runner (M1/M2)
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Extract version from pom.xml
-        id: version
-        run: |
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
-
-      - name: Build .jar
-        run: mvn clean package
-
-      - name: Run jpackage for macOS Silicon
-        run: |
-          jpackage \
-            --type dmg \
-            --name EWItool \
-            --input target \
-            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
-            --main-class com.github.ledhed2222.ewitool.Main \
-            --dest target \
-            --app-version ${{ steps.version.outputs.version }} \
-            --vendor "Ledhed2222" \
-            --icon src/main/resources/logo.icns
-
-      - name: Rename DMG to include architecture
-        run: |
-          mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos-silicon.dmg
-
-      - name: Upload to gh release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: target/*-macos-silicon.dmg
+          files: target/*-macos.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
