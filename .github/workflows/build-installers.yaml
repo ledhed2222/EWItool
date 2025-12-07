@@ -69,6 +69,18 @@ jobs:
           # Remove any existing app bundle
           rm -rf target/EWItool.app
 
+          # Build module path from Maven dependencies
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "arm64" ]; then
+            JAVAFX_ARCH="mac-aarch64"
+          else
+            JAVAFX_ARCH="mac"
+          fi
+
+          MODULE_PATH="target/libs/javafx-base-23.0.2-$JAVAFX_ARCH.jar"
+          MODULE_PATH="$MODULE_PATH:target/libs/javafx-graphics-23.0.2-$JAVAFX_ARCH.jar"
+          MODULE_PATH="$MODULE_PATH:target/libs/javafx-controls-23.0.2-$JAVAFX_ARCH.jar"
+
           # First create just the app-image (app bundle), not DMG yet
           jpackage \
             --type app-image \
@@ -79,20 +91,22 @@ jobs:
             --dest target \
             --app-version ${{ steps.version.outputs.version }} \
             --vendor "Ledhed2222" \
-            --icon src/main/resources/logo.icns
+            --icon src/main/resources/logo.icns \
+            --module-path "$MODULE_PATH" \
+            --add-modules javafx.base,javafx.graphics,javafx.controls
 
       - name: Sign app bundle with hardened runtime
         run: |
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
 
-          # Sign all nested binaries, libraries, and frameworks with hardened runtime
+          # Sign all nested binaries, libraries, and frameworks with hardened runtime and entitlements
           find target/EWItool.app/Contents -type f \( -name "*.dylib" -o -name "*.jnilib" -o -perm +111 \) | while read file; do
             echo "Signing: $file"
-            codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime "$file" || true
+            codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --entitlements .github/macos/entitlements.plist "$file" || true
           done
 
-          # Sign the app bundle itself
-          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --deep target/EWItool.app
+          # Sign the app bundle itself with entitlements
+          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --entitlements .github/macos/entitlements.plist --deep target/EWItool.app
 
           # Verify signature
           codesign --verify --deep --strict --verbose=2 target/EWItool.app
