@@ -61,11 +61,19 @@ jobs:
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
           echo "Using certificate: $CERT_IDENTITY"
 
+          # Create clean input directory with only the JAR file
+          rm -rf jpackage-input
+          mkdir -p jpackage-input
+          cp target/EWItool-${{ steps.version.outputs.version }}.jar jpackage-input/
+
+          # Remove any existing app bundle
+          rm -rf target/EWItool.app
+
           # First create just the app-image (app bundle), not DMG yet
           jpackage \
             --type app-image \
             --name EWItool \
-            --input target \
+            --input jpackage-input \
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
