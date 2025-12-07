@@ -6,6 +6,9 @@
 # Ignore Maven build output directory
 target
 
+# jpackage build artifacts
+jpackage-input
+
 # macos artifacts
 .DS_Store
 
