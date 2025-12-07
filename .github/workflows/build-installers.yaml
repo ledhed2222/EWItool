@@ -61,6 +61,9 @@ jobs:
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
           echo "Using certificate: $CERT_IDENTITY"
 
+          # Remove any existing app bundle to prevent recursion
+          rm -rf target/EWItool.app
+
           # First create just the app-image (app bundle), not DMG yet
           jpackage \
             --type app-image \
