@@ -154,11 +154,22 @@ jobs:
             exit 1
           fi
 
+      - name: Smoke test DMG
+        timeout-minutes: 5
+        run: |
+          DMG=target/EWItool-${{ steps.version.outputs.version }}.dmg
+          hdiutil attach "$DMG" -nobrowse -mountpoint /Volumes/EWItool
+          spctl --assess --type execute -vv /Volumes/EWItool/EWItool.app
+          /Volumes/EWItool/EWItool.app/Contents/MacOS/EWItool --smoke | tee smoke.log
+          hdiutil detach /Volumes/EWItool
+          grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
+
       - name: Rename DMG
         run: |
           mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos.dmg
 
       - name: Upload to gh release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: target/*-macos.dmg
@@ -208,7 +219,16 @@ jobs:
             --win-menu `
             --win-shortcut
 
+      - name: Smoke test installer
+        timeout-minutes: 5
+        run: |
+          $install = Start-Process target/EWItool-${{ steps.version.outputs.version }}.exe -ArgumentList '/quiet' -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "installer exited $($install.ExitCode)" }
+          $app = Start-Process "$env:ProgramFiles\EWItool\EWItool.exe" -ArgumentList '--smoke' -Wait -PassThru
+          if ($app.ExitCode -ne 0) { throw "app exited $($app.ExitCode)" }
+
       - name: Upload to gh release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: target/*.exe
@@ -276,7 +296,23 @@ jobs:
             --icon src/main/resources/logo.png \
             --linux-shortcut
 
+      - name: Smoke test DEB
+        timeout-minutes: 5
+        run: |
+          sudo apt-get install -y xvfb ./target/ewitool_*.deb
+          xvfb-run -a /opt/ewitool/bin/ewitool --smoke | tee smoke.log
+          grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
+
+      - name: Smoke test RPM
+        timeout-minutes: 10
+        run: |
+          docker run --rm -v "$PWD/target:/t" fedora:latest bash -c '
+            dnf install -y /t/ewitool-*.rpm xorg-x11-server-Xvfb gtk3 &&
+            xvfb-run -a /opt/ewitool/bin/ewitool --smoke' | tee smoke.log
+          grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
+
       - name: Upload to gh release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: |

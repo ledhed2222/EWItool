@@ -133,6 +133,14 @@ public class UiMain extends Application {
     root.setCenter( tabPane );
     mainStage.setScene(scene);
     mainStage.show();
+
+    // used by the release workflow to check that an installed build starts
+    if (getParameters().getRaw().contains( "--smoke" )) {
+      System.out.println( "EWItool " + APP_VERSION + " started" );
+      midiHandler.close();
+      Platform.exit();
+      System.exit( 0 );
+    }
   }
 
   private class MainMenuBar extends MenuBar {
