@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HexFormat;
 import java.util.Random;
-
 import org.junit.jupiter.api.Test;
 
 class EWI4000sPatchTest {
