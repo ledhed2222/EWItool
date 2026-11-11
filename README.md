@@ -25,6 +25,8 @@ mvn verify       # unit (*Test) and integration (*IT) tests
 
 The `Build Native Installers` workflow builds a signed/notarized macOS `.dmg`, a Windows `.exe`, and Linux `.deb`/`.rpm`, and attaches them to the GitHub release for the tag.
 
+Once all three platforms are uploaded, the `announce` job posts the release to the EWI Discord channel (via the `DISCORD_WEBHOOK_URL` secret) and puts a pre-filled r/windsynth post link in the run summary.
+
 Dependabot opens weekly PRs for Maven dependencies and GitHub Actions; CI must pass before merging.
 
 ### Bumping Java version
