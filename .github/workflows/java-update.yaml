@@ -1,0 +1,46 @@
+name: Java Update
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open PR for newer Java release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LATEST=$(curl -fsS https://api.adoptium.net/v3/info/available_releases | jq .most_recent_feature_release)
+          CURRENT=$(cat .java-version)
+          if [ "$LATEST" -le "$CURRENT" ]; then
+            echo "Java $CURRENT is current"
+            exit 0
+          fi
+          BRANCH=java-$LATEST
+          if git ls-remote --exit-code --heads origin "$BRANCH"; then
+            echo "$BRANCH already exists"
+            exit 0
+          fi
+
+          printf %s "$LATEST" > .java-version
+          sed -i -E "s#(<maven.compiler.(source|target)>)$CURRENT<#\1$LATEST<#" pom.xml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git commit -am "Bump Java from $CURRENT to $LATEST"
+          git push origin "$BRANCH"
+          gh pr create --title "Bump Java from $CURRENT to $LATEST" \
+            --body "Java $LATEST is the newest Temurin GA release. Updates \`.java-version\` and the compiler level in \`pom.xml\`. Run the Build Native Installers workflow on this branch before merging to check the packaged apps."
+          # PRs opened with GITHUB_TOKEN don't trigger CI, but dispatching it does
+          gh workflow run ci.yaml --ref "$BRANCH"
