@@ -38,7 +38,7 @@ import javafx.scene.layout.BorderPane;
 public class UiMain extends Application {
 
   static final String  APP_NAME = "EWItool";
-  static final String  APP_VERSION = java.util.Objects.requireNonNullElse( UiMain.class.getPackage().getImplementationVersion(), "dev" );
+  static final String  APP_VERSION = java.util.Objects.requireNonNullElse(UiMain.class.getPackage().getImplementationVersion(), "dev");
   static final int     COPYRIGHT_YEAR = 2025;
   static final String  RELEASE_STATUS = "Production";
   static final String  LEAD_AUTHOR = "S.Merrony & ledhed2222";
@@ -135,11 +135,11 @@ public class UiMain extends Application {
     mainStage.show();
 
     // used by the release workflow to check that an installed build starts
-    if (getParameters().getRaw().contains( "--smoke" )) {
-      System.out.println( "EWItool " + APP_VERSION + " started" );
+    if (getParameters().getRaw().contains("--smoke")) {
+      System.out.println("EWItool " + APP_VERSION + " started");
       midiHandler.close();
       Platform.exit();
-      System.exit( 0 );
+      System.exit(0);
     }
   }
 
