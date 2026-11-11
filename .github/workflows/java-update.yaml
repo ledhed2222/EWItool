@@ -16,11 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Open PR for newer Java release
+      - name: Open PR for newer Java LTS release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          LATEST=$(curl -fsS https://api.adoptium.net/v3/info/available_releases | jq .most_recent_feature_release)
+          LATEST=$(curl -fsS https://api.adoptium.net/v3/info/available_releases | jq .most_recent_lts)
           CURRENT=$(cat .java-version)
           if [ "$LATEST" -le "$CURRENT" ]; then
             echo "Java $CURRENT is current"
@@ -41,6 +41,6 @@ jobs:
           git commit -am "Bump Java from $CURRENT to $LATEST"
           git push origin "$BRANCH"
           gh pr create --title "Bump Java from $CURRENT to $LATEST" \
-            --body "Java $LATEST is the newest Temurin GA release. Updates \`.java-version\` and the compiler level in \`pom.xml\`. Run the Build Native Installers workflow on this branch before merging to check the packaged apps."
+            --body "Java $LATEST is the newest Temurin LTS release. Updates \`.java-version\` and the compiler level in \`pom.xml\`. Run the Build Native Installers workflow on this branch before merging to check the packaged apps."
           # PRs opened with GITHUB_TOKEN don't trigger CI, but dispatching it does
           gh workflow run ci.yaml --ref "$BRANCH"
