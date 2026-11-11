@@ -128,7 +128,7 @@ jobs:
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait 2>&1)
+            --wait 2>&1) || true
 
           echo "$SUBMIT_OUTPUT"
 
@@ -299,6 +299,8 @@ jobs:
       - name: Smoke test DEB
         timeout-minutes: 5
         run: |
+          # runners lack the menu dirs the deb's postinst writes its shortcut into
+          sudo mkdir -p /usr/share/applications /usr/share/desktop-directories
           sudo apt-get install -y xvfb ./target/ewitool_*.deb
           xvfb-run -a /opt/ewitool/bin/ewitool --smoke | tee smoke.log
           grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
