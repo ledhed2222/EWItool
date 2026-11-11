@@ -11,7 +11,7 @@ echo "Using certificate: $CERT_IDENTITY"
 
 # Build JAR
 echo "Building JAR..."
-mvn clean package
+mvn -B clean package
 
 # Create clean input directory
 echo "Preparing jpackage input..."
