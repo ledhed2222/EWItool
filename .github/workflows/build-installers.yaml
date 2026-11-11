@@ -12,11 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
+          cache: maven
 
       - name: Extract version from pom.xml
         id: version
@@ -51,7 +52,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
       - name: Build .jar
-        run: mvn clean package
+        run: mvn -B clean package
 
       - name: Build app bundle with jpackage
         env:
@@ -65,21 +66,13 @@ jobs:
           rm -rf jpackage-input
           mkdir -p jpackage-input
           cp target/EWItool-${{ steps.version.outputs.version }}.jar jpackage-input/
+          mkdir -p jpackage-input/libs
+          cp target/libs/coremidi4j-*.jar jpackage-input/libs/
 
           # Remove any existing app bundle
           rm -rf target/EWItool.app
 
-          # Build module path from Maven dependencies
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "arm64" ]; then
-            JAVAFX_ARCH="mac-aarch64"
-          else
-            JAVAFX_ARCH="mac"
-          fi
-
-          MODULE_PATH="target/libs/javafx-base-23.0.2-$JAVAFX_ARCH.jar"
-          MODULE_PATH="$MODULE_PATH:target/libs/javafx-graphics-23.0.2-$JAVAFX_ARCH.jar"
-          MODULE_PATH="$MODULE_PATH:target/libs/javafx-controls-23.0.2-$JAVAFX_ARCH.jar"
+          MODULE_PATH=$(ls target/libs/javafx-*-mac*.jar | paste -sd: -)
 
           # First create just the app-image (app bundle), not DMG yet
           jpackage \
@@ -177,11 +170,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
+          cache: maven
 
       - name: Extract version from pom.xml
         id: version
@@ -193,19 +187,17 @@ jobs:
           echo "Building version: $VERSION"
 
       - name: Build .jar
-        run: mvn clean package
-
-      - name: Convert PNG to ICO for Windows
-        run: |
-          # jpackage will use PNG on Windows if ICO not available
-          # We'll use the PNG file directly
+        run: mvn -B clean package
 
       - name: Run jpackage for Windows
         run: |
+          New-Item -ItemType Directory -Force target/dist | Out-Null
+          Copy-Item target/EWItool-${{ steps.version.outputs.version }}.jar target/dist
+          Copy-Item -Recurse target/libs target/dist
           jpackage `
             --type exe `
             --name EWItool `
-            --input target `
+            --input target/dist `
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar `
             --main-class com.github.ledhed2222.ewitool.Main `
             --dest target `
@@ -228,11 +220,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
+          cache: maven
 
       - name: Extract version from pom.xml
         id: version
@@ -247,14 +240,20 @@ jobs:
           sudo apt-get install -y libfreetype6-dev libasound2-dev fakeroot rpm
 
       - name: Build .jar
-        run: mvn clean package
+        run: mvn -B clean package
+
+      - name: Stage jpackage input
+        run: |
+          mkdir -p target/dist
+          cp target/EWItool-${{ steps.version.outputs.version }}.jar target/dist/
+          cp -r target/libs target/dist/
 
       - name: Run jpackage for Linux (DEB)
         run: |
           jpackage \
             --type deb \
             --name ewitool \
-            --input target \
+            --input target/dist \
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
@@ -268,7 +267,7 @@ jobs:
           jpackage \
             --type rpm \
             --name ewitool \
-            --input target \
+            --input target/dist \
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
