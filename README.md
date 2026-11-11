@@ -33,4 +33,4 @@ Update `.java-version` and `maven.compiler.source`/`target` in `pom.xml`.
 
 ### Changing icon
 
-Replace `src/main/resources/logo.png` and `src/main/resources/logo.icns`.
+Replace `src/main/resources/logo.png`, `logo.icns` (macOS), and `logo.ico` (Windows).

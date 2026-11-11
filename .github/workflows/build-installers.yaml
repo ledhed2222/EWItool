@@ -151,7 +151,7 @@ jobs:
             --dest target `
             --app-version ${{ steps.version.outputs.version }} `
             --vendor "Ledhed2222" `
-            --icon src/main/resources/logo.png `
+            --icon src/main/resources/logo.ico `
             --win-dir-chooser `
             --win-menu `
             --win-shortcut
