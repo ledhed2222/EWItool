@@ -6,14 +6,12 @@ import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class PatchSetIT {
 
-  @TempDir
-  Path dir;
+  @TempDir Path dir;
 
   private void assertConverted(String ext, byte[] bodyMarker) throws Exception {
     int len = EWI4000sPatch.EWI_PATCH_LENGTH;
@@ -35,12 +33,13 @@ class PatchSetIT {
 
     byte[] syx = Files.readAllBytes(dir.resolve("bank.syx"));
     assertArrayEquals(patches.toByteArray(), syx);
-    assertEquals("Patch 99", new EWI4000sPatch(Arrays.copyOfRange(syx, 99 * len, 100 * len)).getName());
+    assertEquals(
+        "Patch 99", new EWI4000sPatch(Arrays.copyOfRange(syx, 99 * len, 100 * len)).getName());
   }
 
   @Test
   void convertsBnk() throws Exception {
-    assertConverted("bnk", new byte[] { 'B', 'O', 'D', 'Y', 0, 0, 0, 0 });
+    assertConverted("bnk", new byte[] {'B', 'O', 'D', 'Y', 0, 0, 0, 0});
   }
 
   @Test

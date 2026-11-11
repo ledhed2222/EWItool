@@ -1,20 +1,17 @@
 /**
  * This file is part of EWItool.
  *
- *  EWItool is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ * <p>EWItool is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- *  EWItool is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * <p>EWItool is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with EWItool.  If not, see <http://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with EWItool. If not,
+ * see <http://www.gnu.org/licenses/>.
  */
-
 package com.github.ledhed2222.ewitool;
 
 import javafx.geometry.VPos;
@@ -24,31 +21,30 @@ import javafx.scene.layout.GridPane;
 
 /**
  * @author steve
- *
  */
 public class UiFormantGrid extends GridPane {
-  
+
   ChoiceBox<String> formantChoice;
-  
-  UiFormantGrid( EWI4000sPatch editPatch, MidiHandler midiHandler ) {
-    
-    setId( "editor-grid" );
-    
-    Label mainLabel = new Label( "Formant Filter" );
-    mainLabel.setId( "editor-section-label" );
-    GridPane.setValignment( mainLabel, VPos.TOP );
-    add( mainLabel, 0, 0 );
+
+  UiFormantGrid(EWI4000sPatch editPatch, MidiHandler midiHandler) {
+
+    setId("editor-grid");
+
+    Label mainLabel = new Label("Formant Filter");
+    mainLabel.setId("editor-section-label");
+    GridPane.setValignment(mainLabel, VPos.TOP);
+    add(mainLabel, 0, 0);
 
     formantChoice = new ChoiceBox<String>();
-    formantChoice.getItems().addAll( "Off", "Woodwind", "Strings" );
-    formantChoice.setOnAction( (event) -> {
-      midiHandler.sendLiveControl( 5, 81, formantChoice.getSelectionModel().getSelectedIndex() );
-      editPatch.formantFilter = formantChoice.getSelectionModel().getSelectedIndex(); 
+    formantChoice.getItems().addAll("Off", "Woodwind", "Strings");
+    formantChoice.setOnAction(event -> {
+      midiHandler.sendLiveControl(5, 81, formantChoice.getSelectionModel().getSelectedIndex());
+      editPatch.formantFilter = formantChoice.getSelectionModel().getSelectedIndex();
     });
-    add( formantChoice, 0, 1 );
+    add(formantChoice, 0, 1);
   }
 
-  void setControls( EWI4000sPatch editPatch ) {
-    formantChoice.getSelectionModel().select( editPatch.formantFilter );
+  void setControls(EWI4000sPatch editPatch) {
+    formantChoice.getSelectionModel().select(editPatch.formantFilter);
   }
 }

@@ -1,20 +1,17 @@
 /**
  * This file is part of EWItool.
  *
- *  EWItool is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ * <p>EWItool is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- *  EWItool is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * <p>EWItool is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with EWItool.  If not, see <http://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with EWItool. If not,
+ * see <http://www.gnu.org/licenses/>.
  */
-
 package com.github.ledhed2222.ewitool;
 
 import javafx.geometry.HPos;
@@ -27,53 +24,54 @@ import javafx.scene.layout.RowConstraints;
 
 /**
  * @author steve
- *
  */
 public class UiBiteGrid extends GridPane {
-  
+
   Slider vibratoSlider, tremoloSlider;
-  
+
   UiBiteGrid(EWI4000sPatch editPatch, MidiHandler midiHandler) {
-    
-    setId( "editor-grid" );
+
+    setId("editor-grid");
 
     RowConstraints fixedRC, vgrowRC;
     fixedRC = new RowConstraints();
-    fixedRC.setVgrow( Priority.NEVER );
+    fixedRC.setVgrow(Priority.NEVER);
     vgrowRC = new RowConstraints();
-    vgrowRC.setVgrow( Priority.ALWAYS );
-    
-    getRowConstraints().addAll( fixedRC, vgrowRC, vgrowRC, vgrowRC, vgrowRC );
+    vgrowRC.setVgrow(Priority.ALWAYS);
 
-    Label mainLabel = new Label( "Bite" );
-    mainLabel.setId( "editor-section-label" );
-    add( mainLabel, 0, 0 );
-      
-    vibratoSlider = new Slider( 0.0, 127.0, 0.0 );
-    vibratoSlider.setOrientation( Orientation.HORIZONTAL );
-    vibratoSlider.setMajorTickUnit( 32.0 );
-    vibratoSlider.valueProperty().addListener( (observable, oldVal, newVal)-> {
-      midiHandler.sendLiveControl( 2, 81, newVal.intValue() );
-      editPatch.biteVibrato = newVal.intValue();
-    });
-    add( vibratoSlider, 0, 2 );
-    add( new BoundBelowControlLabel( "Vibrato", HPos.CENTER, vibratoSlider ), 0, 1 );
+    getRowConstraints().addAll(fixedRC, vgrowRC, vgrowRC, vgrowRC, vgrowRC);
 
-    
-    tremoloSlider = new Slider( 0.0, 127.0, 0.0 );
-    tremoloSlider.setOrientation( Orientation.HORIZONTAL );
-    tremoloSlider.setMajorTickUnit( 32.0 );
-    tremoloSlider.valueProperty().addListener( (observable, oldVal, newVal)-> {
-      midiHandler.sendLiveControl( 0, 88, newVal.intValue() );
-      editPatch.biteTremolo = newVal.intValue();
-    });
-    add( tremoloSlider, 0, 4 );
-    add( new BoundBelowControlLabel( "Tremolo", HPos.CENTER, tremoloSlider ), 0, 3 );
-    
+    Label mainLabel = new Label("Bite");
+    mainLabel.setId("editor-section-label");
+    add(mainLabel, 0, 0);
+
+    vibratoSlider = new Slider(0.0, 127.0, 0.0);
+    vibratoSlider.setOrientation(Orientation.HORIZONTAL);
+    vibratoSlider.setMajorTickUnit(32.0);
+    vibratoSlider
+        .valueProperty()
+        .addListener((observable, oldVal, newVal) -> {
+          midiHandler.sendLiveControl(2, 81, newVal.intValue());
+          editPatch.biteVibrato = newVal.intValue();
+        });
+    add(vibratoSlider, 0, 2);
+    add(new BoundBelowControlLabel("Vibrato", HPos.CENTER, vibratoSlider), 0, 1);
+
+    tremoloSlider = new Slider(0.0, 127.0, 0.0);
+    tremoloSlider.setOrientation(Orientation.HORIZONTAL);
+    tremoloSlider.setMajorTickUnit(32.0);
+    tremoloSlider
+        .valueProperty()
+        .addListener((observable, oldVal, newVal) -> {
+          midiHandler.sendLiveControl(0, 88, newVal.intValue());
+          editPatch.biteTremolo = newVal.intValue();
+        });
+    add(tremoloSlider, 0, 4);
+    add(new BoundBelowControlLabel("Tremolo", HPos.CENTER, tremoloSlider), 0, 3);
   }
-  
-  void setControls( EWI4000sPatch editPatch ) {
-    vibratoSlider.setValue( editPatch.biteVibrato );
-    tremoloSlider.setValue(  editPatch.biteTremolo );
+
+  void setControls(EWI4000sPatch editPatch) {
+    vibratoSlider.setValue(editPatch.biteVibrato);
+    tremoloSlider.setValue(editPatch.biteTremolo);
   }
 }
