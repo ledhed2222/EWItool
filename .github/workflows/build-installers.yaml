@@ -51,71 +51,8 @@ jobs:
           # Enable codesigning from a non user interactive shell
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - name: Build .jar
-        run: mvn -B clean package
-
-      - name: Build app bundle with jpackage
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          # Get the certificate identity name
-          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-          echo "Using certificate: $CERT_IDENTITY"
-
-          # Create clean input directory with only the JAR file
-          rm -rf jpackage-input
-          mkdir -p jpackage-input
-          cp target/EWItool-${{ steps.version.outputs.version }}.jar jpackage-input/
-          mkdir -p jpackage-input/libs
-          cp target/libs/coremidi4j-*.jar jpackage-input/libs/
-
-          # Remove any existing app bundle
-          rm -rf target/EWItool.app
-
-          MODULE_PATH=$(ls target/libs/javafx-*-mac*.jar | paste -sd: -)
-
-          # First create just the app-image (app bundle), not DMG yet
-          jpackage \
-            --type app-image \
-            --name EWItool \
-            --input jpackage-input \
-            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
-            --main-class com.github.ledhed2222.ewitool.Main \
-            --dest target \
-            --app-version ${{ steps.version.outputs.version }} \
-            --vendor "Ledhed2222" \
-            --icon src/main/resources/logo.icns \
-            --module-path "$MODULE_PATH" \
-            --add-modules javafx.base,javafx.graphics,javafx.controls
-
-      - name: Sign app bundle with hardened runtime
-        run: |
-          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-
-          # Sign all nested binaries, libraries, and frameworks with hardened runtime and entitlements
-          find target/EWItool.app/Contents -type f \( -name "*.dylib" -o -name "*.jnilib" -o -perm +111 \) | while read file; do
-            echo "Signing: $file"
-            codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --entitlements .github/macos/entitlements.plist "$file" || true
-          done
-
-          # Sign the app bundle itself with entitlements
-          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --entitlements .github/macos/entitlements.plist --deep target/EWItool.app
-
-          # Verify signature
-          codesign --verify --deep --strict --verbose=2 target/EWItool.app
-
-      - name: Create and sign DMG
-        run: |
-          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-
-          # Create DMG from signed app bundle
-          hdiutil create -volname EWItool -srcfolder target/EWItool.app -ov -format UDZO target/EWItool-${{ steps.version.outputs.version }}.dmg
-
-          # Sign the DMG
-          codesign --force --sign "$CERT_IDENTITY" --timestamp target/EWItool-${{ steps.version.outputs.version }}.dmg
-
-          # Verify DMG signature
-          codesign --verify --verbose=4 target/EWItool-${{ steps.version.outputs.version }}.dmg
+      - name: Build, sign, and package DMG
+        run: scripts/build-macos.sh
 
       - name: Notarize DMG
         env:

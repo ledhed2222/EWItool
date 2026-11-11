@@ -8,7 +8,7 @@ JavaFX GUI patch editor/librarian for the Akai EWI4000s, talking to the instrume
 - `mvn verify` - unit tests (`*Test`, surefire) + integration tests (`*IT`, failsafe)
 - `mvn test -Dtest=EWI4000sPatchTest` - single test class
 - `mvn spotless:apply` - format code (google-java-format); `mvn verify` fails on unformatted code
-- `scripts/build-macos-local.sh` - local signed macOS build (needs a Developer ID cert in the keychain)
+- `scripts/build-macos.sh` - signed macOS app + dmg, used by the release workflow; runs locally (needs a Developer ID cert in the keychain)
 
 ## Layout
 
