@@ -11,13 +11,24 @@ echo "Using certificate: $CERT_IDENTITY"
 
 # Build JAR
 echo "Building JAR..."
-mvn clean package
+mvn -B clean package
 
 # Create clean input directory
 echo "Preparing jpackage input..."
 rm -rf jpackage-input
 mkdir -p jpackage-input
 cp target/EWItool-$VERSION.jar jpackage-input/
+mkdir -p jpackage-input/libs
+cp target/libs/coremidi4j-*.jar jpackage-input/libs/
+# notarization rejects unsigned native libraries, including ones packed inside jars
+for JAR in "$PWD"/jpackage-input/libs/*.jar; do
+  for LIB in $(unzip -Z1 "$JAR" | grep '\.dylib$'); do
+    NATIVE=$(mktemp -d)
+    unzip -q "$JAR" "$LIB" -d "$NATIVE"
+    codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime "$NATIVE/$LIB"
+    jar uf "$JAR" -C "$NATIVE" "$LIB"
+  done
+done
 
 # Remove old app bundle
 rm -rf target/EWItool.app
@@ -25,20 +36,7 @@ rm -rf target/EWItool.app
 # Create app bundle
 echo "Creating app bundle..."
 
-# Get JavaFX version and architecture
-JAVAFX_VERSION=23.0.2
-ARCH=$(uname -m)
-if [ "$ARCH" = "arm64" ]; then
-  JAVAFX_ARCH="mac-aarch64"
-else
-  JAVAFX_ARCH="mac"
-fi
-
-# Build module path from Maven repository
-JAVAFX_BASE="$HOME/.m2/repository/org/openjfx"
-MODULE_PATH="$JAVAFX_BASE/javafx-base/$JAVAFX_VERSION/javafx-base-$JAVAFX_VERSION-$JAVAFX_ARCH.jar"
-MODULE_PATH="$MODULE_PATH:$JAVAFX_BASE/javafx-graphics/$JAVAFX_VERSION/javafx-graphics-$JAVAFX_VERSION-$JAVAFX_ARCH.jar"
-MODULE_PATH="$MODULE_PATH:$JAVAFX_BASE/javafx-controls/$JAVAFX_VERSION/javafx-controls-$JAVAFX_VERSION-$JAVAFX_ARCH.jar"
+MODULE_PATH=$(ls target/libs/javafx-*-mac*.jar | paste -sd: -)
 
 jpackage \
   --type app-image \

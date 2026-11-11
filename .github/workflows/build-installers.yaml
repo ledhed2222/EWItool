@@ -12,11 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
+          cache: maven
 
       - name: Extract version from pom.xml
         id: version
@@ -50,79 +51,8 @@ jobs:
           # Enable codesigning from a non user interactive shell
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - name: Build .jar
-        run: mvn clean package
-
-      - name: Build app bundle with jpackage
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          # Get the certificate identity name
-          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-          echo "Using certificate: $CERT_IDENTITY"
-
-          # Create clean input directory with only the JAR file
-          rm -rf jpackage-input
-          mkdir -p jpackage-input
-          cp target/EWItool-${{ steps.version.outputs.version }}.jar jpackage-input/
-
-          # Remove any existing app bundle
-          rm -rf target/EWItool.app
-
-          # Build module path from Maven dependencies
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "arm64" ]; then
-            JAVAFX_ARCH="mac-aarch64"
-          else
-            JAVAFX_ARCH="mac"
-          fi
-
-          MODULE_PATH="target/libs/javafx-base-23.0.2-$JAVAFX_ARCH.jar"
-          MODULE_PATH="$MODULE_PATH:target/libs/javafx-graphics-23.0.2-$JAVAFX_ARCH.jar"
-          MODULE_PATH="$MODULE_PATH:target/libs/javafx-controls-23.0.2-$JAVAFX_ARCH.jar"
-
-          # First create just the app-image (app bundle), not DMG yet
-          jpackage \
-            --type app-image \
-            --name EWItool \
-            --input jpackage-input \
-            --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
-            --main-class com.github.ledhed2222.ewitool.Main \
-            --dest target \
-            --app-version ${{ steps.version.outputs.version }} \
-            --vendor "Ledhed2222" \
-            --icon src/main/resources/logo.icns \
-            --module-path "$MODULE_PATH" \
-            --add-modules javafx.base,javafx.graphics,javafx.controls
-
-      - name: Sign app bundle with hardened runtime
-        run: |
-          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-
-          # Sign all nested binaries, libraries, and frameworks with hardened runtime and entitlements
-          find target/EWItool.app/Contents -type f \( -name "*.dylib" -o -name "*.jnilib" -o -perm +111 \) | while read file; do
-            echo "Signing: $file"
-            codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --entitlements .github/macos/entitlements.plist "$file" || true
-          done
-
-          # Sign the app bundle itself with entitlements
-          codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime --entitlements .github/macos/entitlements.plist --deep target/EWItool.app
-
-          # Verify signature
-          codesign --verify --deep --strict --verbose=2 target/EWItool.app
-
-      - name: Create and sign DMG
-        run: |
-          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -n 's/.*"\(.*\)"/\1/p')
-
-          # Create DMG from signed app bundle
-          hdiutil create -volname EWItool -srcfolder target/EWItool.app -ov -format UDZO target/EWItool-${{ steps.version.outputs.version }}.dmg
-
-          # Sign the DMG
-          codesign --force --sign "$CERT_IDENTITY" --timestamp target/EWItool-${{ steps.version.outputs.version }}.dmg
-
-          # Verify DMG signature
-          codesign --verify --verbose=4 target/EWItool-${{ steps.version.outputs.version }}.dmg
+      - name: Build, sign, and package DMG
+        run: scripts/build-macos.sh
 
       - name: Notarize DMG
         env:
@@ -135,7 +65,7 @@ jobs:
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait 2>&1)
+            --wait 2>&1) || true
 
           echo "$SUBMIT_OUTPUT"
 
@@ -161,11 +91,22 @@ jobs:
             exit 1
           fi
 
+      - name: Smoke test DMG
+        timeout-minutes: 5
+        run: |
+          DMG=target/EWItool-${{ steps.version.outputs.version }}.dmg
+          hdiutil attach "$DMG" -nobrowse -mountpoint /Volumes/EWItool
+          spctl --assess --type execute -vv /Volumes/EWItool/EWItool.app
+          /Volumes/EWItool/EWItool.app/Contents/MacOS/EWItool --smoke | tee smoke.log
+          hdiutil detach /Volumes/EWItool
+          grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
+
       - name: Rename DMG
         run: |
           mv target/EWItool-${{ steps.version.outputs.version }}.dmg target/EWItool-${{ steps.version.outputs.version }}-macos.dmg
 
       - name: Upload to gh release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: target/*-macos.dmg
@@ -177,11 +118,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
+          cache: maven
 
       - name: Extract version from pom.xml
         id: version
@@ -193,19 +135,17 @@ jobs:
           echo "Building version: $VERSION"
 
       - name: Build .jar
-        run: mvn clean package
-
-      - name: Convert PNG to ICO for Windows
-        run: |
-          # jpackage will use PNG on Windows if ICO not available
-          # We'll use the PNG file directly
+        run: mvn -B clean package
 
       - name: Run jpackage for Windows
         run: |
+          New-Item -ItemType Directory -Force target/dist | Out-Null
+          Copy-Item target/EWItool-${{ steps.version.outputs.version }}.jar target/dist
+          Copy-Item -Recurse target/libs target/dist
           jpackage `
             --type exe `
             --name EWItool `
-            --input target `
+            --input target/dist `
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar `
             --main-class com.github.ledhed2222.ewitool.Main `
             --dest target `
@@ -216,7 +156,16 @@ jobs:
             --win-menu `
             --win-shortcut
 
+      - name: Smoke test installer
+        timeout-minutes: 5
+        run: |
+          $install = Start-Process target/EWItool-${{ steps.version.outputs.version }}.exe -ArgumentList '/quiet' -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "installer exited $($install.ExitCode)" }
+          $app = Start-Process "$env:ProgramFiles\EWItool\EWItool.exe" -ArgumentList '--smoke' -Wait -PassThru
+          if ($app.ExitCode -ne 0) { throw "app exited $($app.ExitCode)" }
+
       - name: Upload to gh release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: target/*.exe
@@ -228,11 +177,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
+          cache: maven
 
       - name: Extract version from pom.xml
         id: version
@@ -247,14 +197,20 @@ jobs:
           sudo apt-get install -y libfreetype6-dev libasound2-dev fakeroot rpm
 
       - name: Build .jar
-        run: mvn clean package
+        run: mvn -B clean package
+
+      - name: Stage jpackage input
+        run: |
+          mkdir -p target/dist
+          cp target/EWItool-${{ steps.version.outputs.version }}.jar target/dist/
+          cp -r target/libs target/dist/
 
       - name: Run jpackage for Linux (DEB)
         run: |
           jpackage \
             --type deb \
             --name ewitool \
-            --input target \
+            --input target/dist \
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
@@ -268,7 +224,7 @@ jobs:
           jpackage \
             --type rpm \
             --name ewitool \
-            --input target \
+            --input target/dist \
             --main-jar EWItool-${{ steps.version.outputs.version }}.jar \
             --main-class com.github.ledhed2222.ewitool.Main \
             --dest target \
@@ -277,7 +233,25 @@ jobs:
             --icon src/main/resources/logo.png \
             --linux-shortcut
 
+      - name: Smoke test DEB
+        timeout-minutes: 5
+        run: |
+          # runners lack the menu dirs the deb's postinst writes its shortcut into
+          sudo mkdir -p /usr/share/applications /usr/share/desktop-directories
+          sudo apt-get install -y xvfb ./target/ewitool_*.deb
+          xvfb-run -a /opt/ewitool/bin/ewitool --smoke | tee smoke.log
+          grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
+
+      - name: Smoke test RPM
+        timeout-minutes: 20
+        run: |
+          docker run --rm -v "$PWD/target:/t" fedora:latest bash -c '
+            dnf install -y /t/ewitool-*.rpm xorg-x11-server-Xvfb gtk3 &&
+            xvfb-run -a /opt/ewitool/bin/ewitool --smoke' | tee smoke.log
+          grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
+
       - name: Upload to gh release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: |
