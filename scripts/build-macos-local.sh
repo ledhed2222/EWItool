@@ -20,6 +20,15 @@ mkdir -p jpackage-input
 cp target/EWItool-$VERSION.jar jpackage-input/
 mkdir -p jpackage-input/libs
 cp target/libs/coremidi4j-*.jar jpackage-input/libs/
+# notarization rejects unsigned native libraries, including ones packed inside jars
+for JAR in "$PWD"/jpackage-input/libs/*.jar; do
+  for LIB in $(unzip -Z1 "$JAR" | grep '\.dylib$'); do
+    NATIVE=$(mktemp -d)
+    unzip -q "$JAR" "$LIB" -d "$NATIVE"
+    codesign --force --sign "$CERT_IDENTITY" --timestamp --options runtime "$NATIVE/$LIB"
+    jar uf "$JAR" -C "$NATIVE" "$LIB"
+  done
+done
 
 # Remove old app bundle
 rm -rf target/EWItool.app
