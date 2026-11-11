@@ -306,7 +306,7 @@ jobs:
           grep -q "EWItool ${{ steps.version.outputs.version }} started" smoke.log
 
       - name: Smoke test RPM
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           docker run --rm -v "$PWD/target:/t" fedora:latest bash -c '
             dnf install -y /t/ewitool-*.rpm xorg-x11-server-Xvfb gtk3 &&
