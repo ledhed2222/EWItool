@@ -38,7 +38,7 @@ public class UiMain extends Application {
   static final String APP_VERSION =
       java.util.Objects.requireNonNullElse(
           UiMain.class.getPackage().getImplementationVersion(), "dev");
-  static final int COPYRIGHT_YEAR = 2025;
+  static final int COPYRIGHT_YEAR = 2026;
   static final String RELEASE_STATUS = "Production";
   static final String LEAD_AUTHOR = "S.Merrony & ledhed2222";
 
